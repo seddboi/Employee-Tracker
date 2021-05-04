@@ -1,11 +1,11 @@
 require('dotenv').config();
 
 const connectionDB = {
-    host: process.env.DB_NAME,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: 'employee_db',
-    port: 3318,
+    host: 'localhost',
+    port: 3306,
+    user: 'root',
+    password: 'password',
+    database: 'employees_db',
 };
 
 module.exports = connectionDB;
