@@ -1,12 +1,12 @@
-DROP DATABASE IF EXISTS employees_db;
+DROP DATABASE IF EXISTS employee1_db;
 
-CREATE DATABASE employees_db;
+CREATE DATABASE employee1_db;
 
-USE employees_db;
+USE employee1_db;
 
 CREATE TABLE department (
     id INT AUTO_INCREMENT NOT NULL,
-    name VARCHAR(30) NOT NULL,
+    dept_name VARCHAR(30) NOT NULL,
     PRIMARY KEY (id)
 );
 
@@ -16,7 +16,7 @@ CREATE TABLE roles (
     salary DECIMAL NOT NULL,
     department_id INT NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN_key (department_id) REFERENCES department(id)
+    FOREIGN KEY (department_id) REFERENCES department(id)
 );
 
 CREATE TABLE employee (
@@ -26,6 +26,6 @@ CREATE TABLE employee (
     role_id INT NOT NULL,
     manager_id INT,
     PRIMARY KEY (id),
-    FOREIGN_KEY (role_id) REFERENCES roles (id),
-    FOREIGN_KEY (manager_id) REFERENCES employee(id)
+    FOREIGN KEY (role_id) REFERENCES roles (id),
+    FOREIGN KEY (manager_id) REFERENCES employee(id)
 );
