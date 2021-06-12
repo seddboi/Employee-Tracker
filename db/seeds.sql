@@ -1,9 +1,9 @@
 USE employees_db;
 
 INSERT INTO department (id, name) 
-VALUES (1,'Frontline'), (2, 'Marketing'), (3, 'Corporate');
+VALUES ('Frontline'), ('Marketing'), ('Corporate');
 
-INSERT INTO role (title, salary, department_id)
+INSERT INTO roles (title, salary, department_id)
 VAlUES ('Manager', 60000, 1), ('Crew Member', 20000, 1), ('Shift Lead', 25000, 1), ('Marketing Director', 70000, 2), ('Trainer/Operations Director', 70000, 3), ('Operations Manager', 65000, 1);
 
 INSERT INTO employee (first_name, last_name, role_id, manager_id) 
@@ -13,7 +13,7 @@ SELECT employee.first_name, employee.last_name, roles.title, roles.salary, depar
 
 SELECT* FROM department;
 
-SELECT * FROM role;
+SELECT * FROM roles;
 
 SELECT * FROM employee;
 
