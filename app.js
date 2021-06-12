@@ -1,6 +1,6 @@
 const inquirer = require('inquirer');
 const mysql = require('mysql');
-const conTab = require('console.table');
+const table = require('console.table');
 const connectionDB = require('./config/connection.js');
 
 let databaseConnect = mysql.createConnection(connectionDB);
@@ -52,55 +52,56 @@ function startMenu() {
 
 
 function viewEmployees(employee) {
-    let newQuery = "SELECT a.id, a.first_name, a.last_name, role.title, department.name AS department, role.salary, CONCAT(b.first_name, ' ', b.last_name) AS manager FROM employee as a LEFT JOIN role on a.role_id = role.id LEFT JOIN department on role.department_id = department.id LEFT JOIN employee as b on b.id = a.manager_id;";
+    let newQuery = "SELECT employee.first_name, employee.last_name, roles.title, roles.salary, department.dept_name AS department FROM employee LEFT JOIN roles ON employee.role_id = roles.id LEFT JOIN department ON roles.department_id = department.id";
     // creation of array allows for reorganization of columns to my liking :)
-    let eArray = [];
 
     databaseConnect.query(newQuery, (err, res) => {
         if (err) throw err;
-        res.forEach((employee) => {
-            eArray.push({
-                'id': employee.id, 
-                'first_name': employee.first_name,
-                'last_name': employee.last_name, 
-                'title': employee.title,
-                'department': employee.department,
-                'salary': employee.salary,
-                'manager': employee.manager,
-            });
-        });
+        
+        // res.forEach((employee) => {
+        //     eArray.push({
+        //         'id': employee.id, 
+        //         'first_name': employee.first_name,
+        //         'last_name': employee.last_name, 
+        //         'title': employee.title,
+        //         'department': employee.department,
+        //         'salary': employee.salary,
+        //         'manager': employee.manager,
+        //     });
+        // });
 
-        // Console log whole employee list
+        // Console table whole employee list
         console.log('Here are all active Employees:');
-        console.table(eArray);
-        startMenu();
+        console.table(res);
 
+        startMenu();
     });    
 };
 
-function viewEmployeesBM() {
-    let newQuery = "SELECT a.id, a.first_name, a.last_name, role.title, department.name AS department, role.salary, CONCAT(b.first_name, ' ', b.last_name) AS manager FROM employee as a LEFT JOIN role on a.role_id = role.id LEFT JOIN department on role.department_id = department.id LEFT JOIN employee as b on b.id = a.manager_id ORDER BY manager ASC;";
-    let eArray = [];
 
-    databaseConnect.query(newQuery, (err, res) => {
-        if (err) throw err;
-        res.forEach((employee) => {
-            eArray.push({
-                'manager': employee.manager,
-                'id': employee.id, 
-                'first_name': employee.first_name,
-                'last_name': employee.last_name, 
-                'title': employee.title,
-                'department': employee.department,
-                'salary': employee.salary,
-            });
-        });
+function viewEmployeesBM() {    
+    let mArray = [];
+
+    databaseConnect.query("SELECT DISTINCT b.id, CONCAT(b.first_name, ' ', b.last_name) AS manager FROM employee a Inner JOIN employee b ON a.manager_id = b.id",);
+
+    // databaseConnect.query(newQuery, (err, res) => {
+    //     if (err) throw err;
+    //     res.forEach((employee) => {
+    //         eArray.push({
+    //             'manager': employee.manager,
+    //             'id': employee.id, 
+    //             'first_name': employee.first_name,
+    //             'last_name': employee.last_name, 
+    //             'title': employee.title,
+    //             'department': employee.department,
+    //             'salary': employee.salary,
+    //         });
+    //     });
 
         // Console table whole llst by Manager
-        console.log('Here are all active Employees organized by Manager:');
-        console.table(eArray);
-        startMenu();
-    });    
+    console.log('Here are all active Employees organized by Manager:');
+    console.table(eArray);
+    startMenu();    
 };
 
 function viewEmployeesBD() {
@@ -129,67 +130,60 @@ function viewEmployeesBD() {
     });
 };
 
-function addEmployee() {
-//     inquirer.prompt([
-//         {
-//             name: 'first_name', 
-//             type: 'input', 
-//             message: 'What is the new employee\'s first name?'
-//         },
-//         {
-//             name: 'last_name', 
-//             type: 'input', 
-//             message: 'What is the new employee\'s last name?'
-//         },
-//         {
-//             name: 'role', 
-//             type: 'list', 
-//             message: 'What is the employee\'s role?',
-//             choices: availableRoles
-//         },
-//         {
-//             name: 'manager', 
-//             type: 'list', 
-//             message: 'What is the employee\'s role?',
-//             choices: availableEmployees
-//         }
-//     ]);
+async function addEmployee() {
+    
+    let newQuery = "SELECT id as value, CONCAT(first_name, ' ', last_name) as name FROM employee";
 
-    function getRoles() {
-        let roles = [];
+    databaseConnect.query(newQuery, async( err, employees) => {
+        newQuery = "SELECT id as value, title as name FROM roles";
 
-        databaseConnect.query('SELECT * FROM role;', (err, res) => {
-            res.forEach((role) => {
-                roles.push(
-                    {
-                        'title': role.title,
-                        'id': role.id
-                    }
-                );
+        databaseConnect.query(newQuery, async (err, roles) => {
+            const newEmployee = await inquirer.prompt(
+                {
+                    name: "first_name",
+                    type: 'input',
+                    message: "What is your employee's first name?",
+                },
+                {
+                    name: "last_name",
+                    type: 'input',
+                    message: "What is your employee's last name?",
+                },
+                {
+                    name: "role_id",
+                    type: 'list',
+                    message: "What is your employee's RoleID?",
+                    choices: roles,
+                },
+                {
+                    name: "manager_id",
+                    type: "list",
+                    message: "Who is your employee's manager?",
+                    choices: employees,
+                },
+            );
+
+            newQuery = "INSERT INTO employee SET ?"
+
+            databaseConnect.query(newQuery, newEmployee, (err) => {
+                if (err) throw err;
+                console.log("Employee has been added.");
+
+                startMenu();
             });
         });
-        console.log(roles);
-    };
-
-    getRoles();
-    
-    // let getRoles = (roles) => {
-
-    //     roles.forEach((x) => {
-    //         rolesArray.push(x.title);
-    //     });
-    // };
+    });
 };
 
-function removeEmployee() {
+async function removeEmployee() {
     
 };
 
-function updateEmployee() {
+async function updateEmployee() {
     
 };
 
-function updateEmployeeM() {
+async function updateEmployeeM() {
     
 };
 
