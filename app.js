@@ -26,7 +26,7 @@ function startMenu() {
             name: 'restart',
             type: 'list',
             message: 'What would you like to do?',
-            choices: ['View All Employees', 'View All Employees by Manager', 'View All Employees by Department', 'Add Employee', 'Remove Employee', 'Update Employee Role', 'Update Employee Manager'] 
+            choices: ['View All Employees', 'View All Employees by Manager', 'View All Employees by Department', 'Add Employee', 'Remove Employee', 'Update Employee Role', 'Exit'] 
         }
     ).then( (answer) => {
         if (answer.restart == 'View All Employees') {
@@ -40,11 +40,12 @@ function startMenu() {
         } else if (answer.restart == 'Remove Employee') {
             removeEmployee();
         } else if (answer.restart == 'Update Employee Role') {
-            updateEmployee();
+            updateEmployeeR();
         } else if (answer.restart == 'Update Employee Manager') {
             updateEmployeeM();
         } else if (answer.restart == 'Exit') {
             // this disconnects the program from the DB
+            console.log('Goodbye.')
             databaseConnect.end();
         } 
     });
@@ -71,7 +72,11 @@ function viewEmployees(employee) {
         // });
 
         console.log('Here are all active Employees:');
+        
+        console.log('====================================================================');
         console.table(res);
+        console.log('====================================================================');
+
 
         startMenu();
     });    
@@ -188,6 +193,10 @@ async function addEmployee() {
             databaseConnect.query(newQuery, newEmployee, (err) => {
                 if (err) throw err;
                 console.log("Employee has been added."); 
+                
+                console.log('====================================================================');
+                viewEmployees();
+                console.log('====================================================================');
 
                 startMenu();
             });
@@ -221,18 +230,62 @@ async function removeEmployee() {
             if (err) throw err;
 
             console.log('Employee has been removed.');
+            
+            console.log('====================================================================');
+            viewEmployees();
+            console.log('====================================================================');
 
             startMenu();
         });
     });
 };
 
-async function updateEmployee() {
-    
-};
+async function updateEmployeeR() {
+    let newQuery = 'SELECT * FROM employee';
 
-async function updateEmployeeM() {
-    
+    databaseConnect.query(newQuery, async (err, res) => {
+        let worker = await inquirer.prompt([
+            {
+                name: 'employee',
+                type: 'list',
+                message: 'Select an employee whose role you would like to update:',
+                choices: () => {
+                    return res.map( (x) => x.first_name + ' ' + x.last_name)
+                },
+            },
+        ]);
+
+        worker = worker.employee.split(' ')[1];
+
+        const newerQuery = 'SELECT * FROM roles';
+        databaseConnect.query(newerQuery, async (err, res) => {
+            let selectedRole = await inquirer.prompt([
+                {
+                    name: 'role',
+                    type: 'list', 
+                    message: 'Select a new role for the employee:',
+                    choices: () => {
+                        return res.map((x) => x.id + ' ' + x.title)
+                    }
+                },
+            ]);
+
+            selectedRole = selectedRole.role.charAt(0);
+
+            let newestQuery = 'UPDATE employee SET ? WHERE ?';
+            databaseConnect.query(newestQuery, [{role_id: selectedRole}, {last_name: worker},], (err, res) => {
+                if (err) throw err;
+
+                console.log('Employee role has been updated.');
+                
+                console.log('====================================================================');
+                viewEmployees();
+                console.log('====================================================================');
+
+                startMenu();
+            })
+        })
+    });
 };
 
 startApp();
