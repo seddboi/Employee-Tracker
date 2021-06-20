@@ -1,5 +1,6 @@
 {
   "name": "employee-database",
+  "babel": "true",
   "version": "1.0.0",
   "description": "Employee Tracking Database to remove/edit/add employees",
   "main": "app.js",

@@ -10,13 +10,13 @@ function startApp () {
     // this reconnects to the DB
     connectToDB();
     // This begins the inquirer prompt
-    startMenu();
+    startMenu(); 
 };
 
 function connectToDB() {
     databaseConnect.connect(function (err) {
         if (err) throw err;
-        console.log('Connected to database...');
+        console.log('Connected to database...'); 
     });
 }
 
@@ -50,14 +50,14 @@ function startMenu() {
     });
 };
 
-
+// this function is meant to print out all available employees in the db
 function viewEmployees(employee) {
     let newQuery = "SELECT employee.first_name, employee.last_name, roles.title, roles.salary, department.dept_name AS department FROM employee LEFT JOIN roles ON employee.role_id = roles.id LEFT JOIN department ON roles.department_id = department.id";
-    // creation of array allows for reorganization of columns to my liking :)
 
     databaseConnect.query(newQuery, (err, res) => {
         if (err) throw err;
         
+        // old method of gathering employees... too much work imo
         // res.forEach((employee) => {
         //     eArray.push({
         //         'id': employee.id, 
@@ -70,7 +70,6 @@ function viewEmployees(employee) {
         //     });
         // });
 
-        // Console table whole employee list
         console.log('Here are all active Employees:');
         console.table(res);
 
@@ -80,65 +79,82 @@ function viewEmployees(employee) {
 
 
 function viewEmployeesBM() {    
-    let mArray = [];
+    let newQuery = "SELECT * FROM employee";
 
-    databaseConnect.query("SELECT DISTINCT b.id, CONCAT(b.first_name, ' ', b.last_name) AS manager FROM employee a Inner JOIN employee b ON a.manager_id = b.id",);
+    databaseConnect.query(newQuery, async (err, res) => {
+        
+        // let loadEmployees = res.map( (x) => x.manager_id);
+        
+        const selectedMgr = await inquirer.prompt(
+            [
+                {
+                    name: 'selectedMgr',
+                    type: 'list',
+                    message: 'Select a possible manager:',
+                    choices: () => {
+                        return res.map((x) => x.manager_id + ' ' + x.first_name + ' ' + x.last_name);
+                    },
+                }
+            ]
+        );
 
-    // databaseConnect.query(newQuery, (err, res) => {
-    //     if (err) throw err;
-    //     res.forEach((employee) => {
-    //         eArray.push({
-    //             'manager': employee.manager,
-    //             'id': employee.id, 
-    //             'first_name': employee.first_name,
-    //             'last_name': employee.last_name, 
-    //             'title': employee.title,
-    //             'department': employee.department,
-    //             'salary': employee.salary,
-    //         });
-    //     });
+        let selectedMgrID = selectedMgr['selectedMgr'].charAt(0);
 
-        // Console table whole llst by Manager
-    console.log('Here are all active Employees organized by Manager:');
-    console.table(eArray);
-    startMenu();    
+        console.log(selectedMgrID);
+        let newerQuery = `SELECT first_name, last_name FROM employee WHERE manager_id=${selectedMgrID}`;
+        databaseConnect.query(newerQuery, (err, res) => {
+            if (err) throw err;
+
+            console.log('Results:');
+            console.table(res);
+
+            startMenu();
+        });
+    });    
 };
 
+// non-functional 
 function viewEmployeesBD() {
-    let newQuery = "SELECT a.id, a.first_name, a.last_name, role.title, department.name AS department, role.salary, CONCAT(b.first_name, ' ', b.last_name) AS manager FROM employee as a LEFT JOIN role on a.role_id = role.id LEFT JOIN department on role.department_id = department.id LEFT JOIN employee as b on b.id = a.manager_id ORDER BY department ASC;";
-    let eArray = [];
+    let newQuery = "SELECT * FROM department";
 
-    databaseConnect.query(newQuery, (err, res) => {
-        if (err) throw err;
-        res.forEach((employee) => {
-            eArray.push({
-                'department': employee.department,
-                'id': employee.id, 
-                'first_name': employee.first_name,
-                'last_name': employee.last_name, 
-                'title': employee.title,
-                'salary': employee.salary,
-                'manager': employee.manager,
-            });
+    databaseConnect.query(newQuery, async (err, res) => {
+        const selectedDept = await inquirer.prompt(
+            [
+                {
+                    name: 'selectedDept',
+                    type: 'list',
+                    message: 'Select a department:',
+                    choices: () => {
+                        return res.map((x) => x.dept_name);
+                    },
+                }
+            ]
+        );
+        console.log(selectedDept);
+
+        let newerQuery = 'SELECT employee.first_name, employee.last_name, roles.title, roles.salary, department.dept_name AS department FROM employee LEFT JOIN role ON employee.role_id = roles.id LEFT JOIN department ON role.department_id = department.id';
+        databaseConnect.query(newerQuery, (err, res) => {
+            if (err) throw err;
+
+            console.log('Results:');
+            console.table(res.filter( (x) => selectedDept === x.department)); 
+
+            startMenu();
         });
-        
-        // Console table whole employee list by department
-        console.log('Here are all active Employees organized by Department:');
-        console.table(eArray);
-        startMenu();
-
     });
 };
 
 async function addEmployee() {
     
     let newQuery = "SELECT id as value, CONCAT(first_name, ' ', last_name) as name FROM employee";
-
-    databaseConnect.query(newQuery, async( err, employees) => {
+    databaseConnect.query(newQuery, async( err, res) => {
+        let employeeList = res.map( (x) => x.value + ' ' + x.name);
+        // console.log(employeeList);
         newQuery = "SELECT id as value, title as name FROM roles";
-
-        databaseConnect.query(newQuery, async (err, roles) => {
-            const newEmployee = await inquirer.prompt(
+        databaseConnect.query(newQuery, async (err, res) => {
+            let roleList = res.map( (x) => x.value + ' ' + x.name);
+            // console.log(roleList);
+            const newEmployee = await inquirer.prompt([
                 {
                     name: "first_name",
                     type: 'input',
@@ -153,21 +169,25 @@ async function addEmployee() {
                     name: "role_id",
                     type: 'list',
                     message: "What is your employee's RoleID?",
-                    choices: roles,
+                    choices: roleList,
                 },
                 {
                     name: "manager_id",
                     type: "list",
                     message: "Who is your employee's manager?",
-                    choices: employees,
+                    choices: employeeList,
                 },
+            ]
             );
+            newEmployee.role_id = newEmployee.role_id.charAt(0);
+            newEmployee.manager_id = newEmployee.manager_id.charAt(0);
+            // console.log(newEmployee);
 
-            newQuery = "INSERT INTO employee SET ?"
+            newQuery = "INSERT INTO employee SET ?" 
 
             databaseConnect.query(newQuery, newEmployee, (err) => {
                 if (err) throw err;
-                console.log("Employee has been added.");
+                console.log("Employee has been added."); 
 
                 startMenu();
             });
