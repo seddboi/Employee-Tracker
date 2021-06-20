@@ -1,6 +1,6 @@
 ## Welcome to the Employee-Tracker!
 
-<!-- insert video gif here -->
+![](https://github.com/seddboi/Employee-Tracker/blob/main/sample/Untitled_%20Jun%2020%2C%202021%203_58%20AM.gif)
 
 # Introduction
 
