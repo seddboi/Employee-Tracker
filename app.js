@@ -196,7 +196,35 @@ async function addEmployee() {
 };
 
 async function removeEmployee() {
-    
+    let newQuery = 'SELECT * FROM employee';
+    databaseConnect.query(newQuery, async (err, res) => {
+        let employeeName = await inquirer.prompt([
+            {
+                name: 'name',
+                type: 'list',
+                message: 'Select an employee to remove:',
+                choices: () => {
+                    return res.map( (x) => x.first_name + ' ' + x.last_name)
+                }
+            }
+        ]);
+
+        employeeName = employeeName.name.split(' ')[1];
+        console.log(typeof(employeeName));
+
+        const employeeObject = {
+            last_name: employeeName,
+        }
+
+        let newerQuery = 'DELETE FROM employee WHERE ?';
+        databaseConnect.query(newerQuery, employeeObject, (err) => {
+            if (err) throw err;
+
+            console.log('Employee has been removed.');
+
+            startMenu();
+        });
+    });
 };
 
 async function updateEmployee() {
