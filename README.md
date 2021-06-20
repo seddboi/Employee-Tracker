@@ -17,8 +17,10 @@ This application utilizes two main systems to hold this information:
 This application has a few simple steps:
 1. Clone this repository onto your local device
 2. Once open, run 'npm install' in the terminal to download all necessary modules for this program to function
-3. Then run 'node app.js' to start the program
-4. Enjoy!
+3. Fill in the .env.EXAMPLE file to connect to your MySQL Database.
+4. Seed the schema.sql file in MySQL Workbench and do the same for the seeds.sql file
+5. Then run 'node app.js' to start the program
+6. Enjoy!
 
 # License
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
